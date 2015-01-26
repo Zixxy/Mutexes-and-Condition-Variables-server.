@@ -1,8 +1,0 @@
-
-Build:
-1. cp -r cv ~/src/servers
-2. make ~/src/servers/cv
-Run:
-service up /usr/sbin/cv
-Shut Down:
-service down cv
