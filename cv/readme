@@ -1,7 +1,8 @@
 
 Build:
 1. cp -r cv ~/src/servers
-2. make install ~/src/servers/cv
+make ~/src/servers/cv
+make install ~/src/servers/cv
 Run:
 service up /usr/sbin/cv
 Shut Down:
