@@ -1,10 +1,6 @@
-#include "lib.h"
-#include "stdio.h"
-
-#define true 1
-
-int callnr;
-endpoint_t who_e;
+#include "includes.h"
+#include "utils.h"
+#include "mutexes.h"
 
 static void sef_local_startup(void);
 static int sef_cb_init_fresh(int type, sef_init_info_t *info);
@@ -15,21 +11,35 @@ int main(int argc, char *argv[]){
 
 	env_setargs(argc, argv);
     sef_local_startup();
-	
+
+	storeValue = 0;
+
 	while(true){
 		int r;
-		int status;
-		if((r = sef_receive(ANY, &m, &status)) != OK) //tu ma byc OK zapytac
+		if((r = sef_receive(ANY, &m)) != OK) //tu ma byc OK zapytac
 			printf("receive failed %d.\n", r);
 		else{
 			printf("success!\n");
-			break;
 		}
+		resolve_message(m);
 		printf("CV received %d %d from %d\n", r, callnr, who_e);
 	}
 }
 
+static void resolve_message(message m){
+	int callnr;
+	endpoint_t who_e;
+	int call_type = m.m_type;
+	who_e = m.m_source;
+	switch(call_type){
+		case LOCK_MUTEX:
+		lock_mutex(m1_i1, who_e);
+		break;
+		case UNLOCK_MUTEX:
+		break;
 
+	}
+}
 
 static void sef_local_startup()
 {
