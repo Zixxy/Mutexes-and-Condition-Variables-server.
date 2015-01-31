@@ -1,5 +1,9 @@
 #define LOCK_MUTEX 1
 #define UNLOCK_MUTEX 2
+#define SUCCESS 0
+#define POSSIBLE_MUTEXES 1024
+#define POSSIBLE_PROCESSES 256
+
 #define true 1
 #define false 0
 

@@ -5,14 +5,21 @@
 static void sef_local_startup(void);
 static int sef_cb_init_fresh(int type, sef_init_info_t *info);
 static void sef_cb_signal_handler(int signo);
-static void send_response(endpoint_t who, message m);
 static void resolve_message(message m);
+
+void send_response(endpoint_t who, int content){
+	message m;
+	m.m_type = content;
+	send(who, &m);
+}
 
 int main(int argc, char *argv[]){
 	message m;
 
 	env_setargs(argc, argv);
     sef_local_startup();
+
+    create_mutexes();
 
 	while(true){
 		int r;
@@ -44,13 +51,8 @@ static void resolve_message(message m){
         result = EINVAL;
 	}
 	if (result != EDONTREPLY) {
-		m.m_type = result;
-		send_response(who_e, m);
+		send_response(who_e, result);
 	}
-}
-
-static void send_response(endpoint_t who, message m){
-	send(who, &m);
 }
 
 static void sef_local_startup()

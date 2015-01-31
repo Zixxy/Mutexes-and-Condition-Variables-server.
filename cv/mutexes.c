@@ -5,7 +5,7 @@
 
 #include "mutexes.h"
 
-#define POSSIBLE_RESERVATIONS 1000
+#define POSSIBLE_RESERVATIONS 1024
 #define NOBODY_HAS -1 // endpoint is int. Processess have pids greater than 0(am i sure?? - check it). We can use it as flag.
 
 typedef struct Pender{
@@ -78,10 +78,10 @@ int unlock_mutex(int number, endpoint_t who){
 		}
 	}
 	if(which == -1)
-		return IT_IS_NOT_YOURS;
+		return EPERM;
 
 	if(reservations[which].who_has != who){
-		return IT_IS_NOT_YOURS;
+		return EPERM;
 	}
 	else{
 		if(reservations[which].next_pending == NULL){
@@ -90,7 +90,7 @@ int unlock_mutex(int number, endpoint_t who){
 		}
 		else{
 			reservations[which].who_has = reservations[which].next_pending -> who;
-			//notify who_has!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			send_response(reservations[which].who_has, SUCCESS);
 			if(reservations[which].next_pending == reservations[which].last_pending){
 				reservations[which].next_pending = NULL;
 				reservations[which].last_pending = NULL;

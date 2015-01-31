@@ -28,9 +28,3 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
-
-EXTERN int identifier;
-EXTERN endpoint_t who_e;
-EXTERN int call_type;
-EXTERN endpoint_t SELF_E;
-
