@@ -5,7 +5,7 @@
 static void sef_local_startup(void);
 static int sef_cb_init_fresh(int type, sef_init_info_t *info);
 static void sef_cb_signal_handler(int signo);
-
+static void send_response(int value);
 int main(int argc, char *argv[]){
 	message m;
 
@@ -31,14 +31,27 @@ static void resolve_message(message m){
 	endpoint_t who_e;
 	int call_type = m.m_type;
 	who_e = m.m_source;
+	int result;
 	switch(call_type){
 		case LOCK_MUTEX:
-		lock_mutex(m1_i1, who_e);
+		result = lock_mutex(m1_i1, who_e);
 		break;
 		case UNLOCK_MUTEX:
+		result = unlock_mutex(m1_i1, who_e);
 		break;
-
+		default:
+        printf("CV warning: got illegal request from %d\n", who_e); //debug
+        m.m_type = -EINVAL;
+        result = EINVAL;
 	}
+	if (result != EDONTREPLY) {
+		m.m_type = result;
+		send_response(who_e, m);
+	}
+}
+
+static void send_response(endpoint_t who, message &m){
+	int result = send(who_e, &m);
 }
 
 static void sef_local_startup()

@@ -4,10 +4,6 @@
 #define POSSIBLE_RESERVATIONS 1000
 #define NOBODY_HAS -1 // endpoint is int. Processess have pids greater than 0(am i sure?? - check it). We can use it as flag.
 
-#define SUCCESS 0
-#define WAIT 1
-#define IT_IS_NOT_YOURS -1
-
 struct Pender {
 	Pender* next_pending;
 	endpoint_t who;
