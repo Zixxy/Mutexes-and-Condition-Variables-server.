@@ -1,5 +1,5 @@
 PROG=	cv
-SRCS=	main.c
+SRCS=	main.c mutexes.c
 
 DPADD+=	${LIBSYS}
 LDADD+=	-lsys

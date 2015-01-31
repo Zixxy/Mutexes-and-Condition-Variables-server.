@@ -1,25 +1,29 @@
-#include <mutexes.h>
-#include <minix/type.h> // <--definition of endpoint
+#include <minix/type.h> // <--definition of endpoint inside
+#include <sys/errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "mutexes.h"
 
 #define POSSIBLE_RESERVATIONS 1000
 #define NOBODY_HAS -1 // endpoint is int. Processess have pids greater than 0(am i sure?? - check it). We can use it as flag.
 
-struct Pender {
-	Pender* next_pending;
+typedef struct Pender{
+	struct Pender* next_pending;
 	endpoint_t who;
-};
+} Pender;
 
-struct Reservation {
+typedef struct Reservation{
 	endpoint_t who_has;
-	Pender* next_pending;
-	Pender* last_pending;
+	struct Pender* next_pending;
+	struct Pender* last_pending;
 	int number;
-};
+} Reservation;
 
-Reservation* reservations;
+struct Reservation* reservations;
 
-int create_mutexes(){
-	reservations = new Reservation()[POSSIBLE_RESERVATIONS];
+void create_mutexes(){
+	reservations = malloc(POSSIBLE_RESERVATIONS * sizeof(Reservation));
 	for(int i = 0; i < POSSIBLE_RESERVATIONS; ++i){
 		reservations[i].who_has = NOBODY_HAS;
 		reservations[i].next_pending = NULL;
@@ -34,19 +38,19 @@ int try_reservate(int which, endpoint_t who, int number){
 		return SUCCESS;
 	}
 	else{
-		Pender* new_pender = new Pender();
-		new_pender.next_pending = NULL;
-		new_pender.who = who;
+		Pender* new_pender = malloc(sizeof(Pender));
+		new_pender -> next_pending = NULL;
+		new_pender -> who = who;
 
 		if(reservations[which].last_pending == NULL){
 			reservations[which].next_pending = new_pender;
 			reservations[which].last_pending = new_pender;
-			return WAIT;
+			return EDONTREPLY;
 		}
 		else{
 			reservations[which].last_pending -> next_pending = new_pender;
 			reservations[which].last_pending = new_pender;
-			return WAIT;
+			return EDONTREPLY;
 		}
 
 	}
@@ -56,13 +60,13 @@ int lock_mutex(int number, endpoint_t who){
 	int first_not_used = -1;
 	for(int i = 0; i < POSSIBLE_RESERVATIONS; ++i){
 		if(reservations[i].number == number)
-			return result = try_reservate(i, who, number);
+			return try_reservate(i, who, number);
 		else
 			if(first_not_used == -1)
 				if(reservations[i].who_has == NOBODY_HAS)
 					first_not_used = i;
 	}
-	return result = try_reservate(first_not_used, who, number);
+	return try_reservate(first_not_used, who, number);
 }
 
 int unlock_mutex(int number, endpoint_t who){
@@ -85,7 +89,7 @@ int unlock_mutex(int number, endpoint_t who){
 			return SUCCESS;
 		}
 		else{
-			reservations[which].who_has = reservations[which].next_pending.who;
+			reservations[which].who_has = reservations[which].next_pending -> who;
 			//notify who_has!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			if(reservations[which].next_pending == reservations[which].last_pending){
 				reservations[which].next_pending = NULL;

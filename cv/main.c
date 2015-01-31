@@ -1,18 +1,18 @@
 #include "includes.h"
-#include "utils.h"
 #include "mutexes.h"
+#include "constants.h"
 
 static void sef_local_startup(void);
 static int sef_cb_init_fresh(int type, sef_init_info_t *info);
 static void sef_cb_signal_handler(int signo);
-static void send_response(int value);
+static void send_response(endpoint_t who, message m);
+static void resolve_message(message m);
+
 int main(int argc, char *argv[]){
 	message m;
 
 	env_setargs(argc, argv);
     sef_local_startup();
-
-	storeValue = 0;
 
 	while(true){
 		int r;
@@ -22,22 +22,21 @@ int main(int argc, char *argv[]){
 			printf("success!\n");
 		}
 		resolve_message(m);
-		printf("CV received %d %d from %d\n", r, callnr, who_e);
+	//	printf("CV received %d %d from %d\n", r, callnr, who_e);
 	}
 }
 
 static void resolve_message(message m){
-	int callnr;
 	endpoint_t who_e;
 	int call_type = m.m_type;
 	who_e = m.m_source;
 	int result;
 	switch(call_type){
 		case LOCK_MUTEX:
-		result = lock_mutex(m1_i1, who_e);
+		result = lock_mutex(m.m1_i1, who_e);
 		break;
 		case UNLOCK_MUTEX:
-		result = unlock_mutex(m1_i1, who_e);
+		result = unlock_mutex(m.m1_i1, who_e);
 		break;
 		default:
         printf("CV warning: got illegal request from %d\n", who_e); //debug
@@ -50,8 +49,8 @@ static void resolve_message(message m){
 	}
 }
 
-static void send_response(endpoint_t who, message &m){
-	int result = send(who_e, &m);
+static void send_response(endpoint_t who, message m){
+	send(who, &m);
 }
 
 static void sef_local_startup()
