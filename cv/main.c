@@ -25,9 +25,6 @@ int main(int argc, char *argv[]){
 		int r;
 		if((r = sef_receive(ANY, &m)) != OK) //tu ma byc OK zapytac
 			printf("receive failed %d.\n", r);
-		else{
-			printf("success!\n");
-		}
 		resolve_message(m);
 	//	printf("CV received %d %d from %d\n", r, callnr, who_e);
 	}
@@ -45,12 +42,19 @@ static void resolve_message(message m){
 		case UNLOCK_MUTEX:
 		result = unlock_mutex(m.m1_i1, who_e);
 		break;
+		case CS_WAIT:
+		//result = cs_wait(int cond_var_id, int mutex_id, endpoint_t who);
+		break;
+		case CS_BROADCAST:
+		//result = cs_broadcast(cond_var_id);
+		break;
 		default:
         printf("CV warning: got illegal request from %d\n", who_e); //debug
         m.m_type = -EINVAL;
         result = EINVAL;
 	}
-	if (result != EDONTREPLY) {
+	if (result != EDONTREPLY && (result * (-1) != EDONTREPLY)) {
+		printf("result = %d EDONTREPLY = %d\n", result, EDONTREPLY);
 		send_response(who_e, result);
 	}
 }

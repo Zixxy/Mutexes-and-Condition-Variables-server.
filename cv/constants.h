@@ -1,5 +1,8 @@
 #define LOCK_MUTEX 1
 #define UNLOCK_MUTEX 2
+#define CS_WAIT 3
+#define CS_BROADCAST 4	
+
 #define SUCCESS 0
 #define POSSIBLE_MUTEXES 1024
 #define POSSIBLE_PROCESSES 256

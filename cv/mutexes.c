@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 #include "mutexes.h"
+#include "constants.h"
 
-#define POSSIBLE_RESERVATIONS 1024
 #define NOBODY_HAS -1 // endpoint is int. Processess have pids greater than 0(am i sure?? - check it). We can use it as flag.
 
 typedef struct Pender{
@@ -23,8 +23,8 @@ typedef struct Reservation{
 struct Reservation* reservations;
 
 void create_mutexes(){
-	reservations = malloc(POSSIBLE_RESERVATIONS * sizeof(Reservation));
-	for(int i = 0; i < POSSIBLE_RESERVATIONS; ++i){
+	reservations = malloc(POSSIBLE_MUTEXES * sizeof(Reservation));
+	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		reservations[i].who_has = NOBODY_HAS;
 		reservations[i].next_pending = NULL;
 		reservations[i].last_pending = NULL;
@@ -58,7 +58,7 @@ int try_reservate(int which, endpoint_t who, int number){
 
 int lock_mutex(int number, endpoint_t who){
 	int first_not_used = -1;
-	for(int i = 0; i < POSSIBLE_RESERVATIONS; ++i){
+	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].number == number)
 			return try_reservate(i, who, number);
 		else
@@ -71,7 +71,7 @@ int lock_mutex(int number, endpoint_t who){
 
 int unlock_mutex(int number, endpoint_t who){
 	int which = -1;
-	for(int i = 0; i < POSSIBLE_RESERVATIONS; ++i){
+	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].number == number){
 			which = i;
 			break;
