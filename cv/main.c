@@ -1,6 +1,4 @@
 #include "includes.h"
-#include "mutexes.h"
-#include "constants.h"
 
 static void sef_local_startup(void);
 static int sef_cb_init_fresh(int type, sef_init_info_t *info);
@@ -20,10 +18,10 @@ int main(int argc, char *argv[]){
     sef_local_startup();
 
     create_mutexes();
-
+    initialize_cv();
 	while(true){
 		int r;
-		if((r = sef_receive(ANY, &m)) != OK) //tu ma byc OK zapytac
+		if((r = sef_receive(ANY, &m)) != OK) //tu ma byc OK zapytac 	
 			printf("receive failed %d.\n", r);
 		resolve_message(m);
 	//	printf("CV received %d %d from %d\n", r, callnr, who_e);
@@ -43,10 +41,10 @@ static void resolve_message(message m){
 		result = unlock_mutex(m.m1_i1, who_e);
 		break;
 		case CS_WAIT:
-		//result = cs_wait(int cond_var_id, int mutex_id, endpoint_t who);
-		break;
+		result = cs_wait(m.m1_i2, m.m1_i1, who_e);
+		break; 
 		case CS_BROADCAST:
-		//result = cs_broadcast(cond_var_id);
+		result = cs_broadcast(m.m1_i1);
 		break;
 		default:
         printf("CV warning: got illegal request from %d\n", who_e); //debug

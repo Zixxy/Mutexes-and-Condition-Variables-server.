@@ -1,3 +1,6 @@
+#ifndef _INC_H
+#define _INC_H
+
 #define _POSIX_SOURCE      1	/* tell headers to include POSIX stuff */
 #define _MINIX             1	/* tell headers to include MINIX stuff */
 #define _SYSTEM            1    /* get OK and negative error codes */
@@ -28,3 +31,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+
+#include "mutexes.h"
+#include "constants.h"
+#include "condition_variables.h"
+
+#endif

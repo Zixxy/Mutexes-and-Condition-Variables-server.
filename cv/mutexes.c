@@ -1,10 +1,4 @@
-#include <minix/type.h> // <--definition of endpoint inside
-#include <sys/errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "mutexes.h"
-#include "constants.h"
 
 #define NOBODY_HAS -1 // endpoint is int. Processess have pids greater than 0(am i sure?? - check it). We can use it as flag.
 
@@ -77,6 +71,7 @@ int unlock_mutex(int number, endpoint_t who){
 			break;
 		}
 	}
+	printf("which %d who %d\n", which, who);
 	if(which == -1)
 		return EPERM;
 
