@@ -32,7 +32,7 @@ int cs_broadcast(int cond_var_id){
 	int CV;
     int status = minix_rs_lookup("cv", &CV);
     message msg;
-    msg.m1_i1 = mutex_id;
+    msg.m1_i1 = cond_var_id;
 
     return _syscall(CV, 4, &msg);
 }
