@@ -1,0 +1,82 @@
+//add to proto.h
+void tell_cv(message *m_ptr);
+//replace unpause in signal.c with:
+/*===========================================================================*
+ *				unpause					     *
+ *===========================================================================*/
+static void unpause(rmp)
+struct mproc *rmp;		/* which process */
+{
+/* A signal is to be sent to a process.  If that process is hanging on a
+ * system call, the system call must be terminated with EINTR.  Possible
+ * calls are PAUSE, WAIT, READ and WRITE, the latter two for pipes and ttys.
+ * First check if the process is hanging on an PM call.  If not, tell VFS,
+ * so it can check for READs and WRITEs from pipes, ttys and the like.
+ */
+  message m;
+  int r;
+
+  /* If we're already waiting for a delayed call, don't do anything now. */
+  if (rmp->mp_flags & DELAY_CALL)
+	return;
+
+  /* Check to see if process is hanging on a PAUSE, WAIT or SIGSUSPEND call. */
+  if (rmp->mp_flags & (PAUSED | WAITING | SIGSUSPENDED)) {
+	/* Stop process from running. No delay calls: it called us. */
+	if ((r = sys_stop(rmp->mp_endpoint)) != OK)
+		panic("sys_stop failed: %d", r);
+
+	rmp->mp_flags |= UNPAUSED;
+
+	/* We interrupt the actual call from sig_send() below. */
+	return;
+  }
+
+  /* Not paused in PM. Let VFS try to unpause the process. */
+  if (!(rmp->mp_flags & PM_SIG_PENDING)) {
+	/* Stop process from running. */
+	r = sys_delay_stop(rmp->mp_endpoint);
+
+	/* If the process is still busy sending a message, the kernel will give
+	 * us EBUSY now and send a SIGSNDELAY to the process as soon as sending
+	 * is done.
+	 */
+	if (r == EBUSY) {
+		rmp->mp_flags |= DELAY_CALL;
+
+		return;
+	}
+	else if (r != OK) panic("sys_stop failed: %d", r);
+
+	rmp->mp_flags |= PM_SIG_PENDING;
+  }
+
+  m.m_type = PM_UNPAUSE;
+  m.PM_PROC = rmp->mp_endpoint;
+
+  tell_vfs(rmp, &m);
+  /* Also tell CV. */
+  tell_cv(&m);
+  /* Also tell VM. */
+  vm_notify_sig_wrapper(rmp->mp_endpoint);
+}
+//add to utility.c
+/*===========================================================================*
+ *				tell_cv			 	     *
+ *===========================================================================*/
+void tell_cv(m_ptr)
+message *m_ptr;
+{
+	mproc* dst;
+ 	for (dst = &mproc[0]; dst < &mproc[NR_PROCS]; dst++) {
+        if (!(dst->mp_flags & IN_USE))
+                continue;
+        if (!strcmp(dst -> mp_name, "ipc")) {
+                ipc_ep = dst -> mp_endpoint;
+                break;
+        }
+  	}
+  	// try send signal to cv.
+  	printf("telling cv %d about %d \n", m_ptr -> m_source, m.m1_i1);
+  	asynsend3(dst -> mp_endpoint, m_ptr, AMF_NOREPLY);
+};
