@@ -67,16 +67,21 @@ struct mproc *rmp;		/* which process */
 void tell_cv(m_ptr)
 message *m_ptr;
 {
-	mproc* dst;
- 	for (dst = &mproc[0]; dst < &mproc[NR_PROCS]; dst++) {
+  struct mproc* dst;
+  int gotit = 0;
+  for (dst = &mproc[0]; dst < &mproc[NR_PROCS]; dst++) {
         if (!(dst->mp_flags & IN_USE))
                 continue;
-        if (!strcmp(dst -> mp_name, "ipc")) {
-                ipc_ep = dst -> mp_endpoint;
+        if (!strcmp(dst -> mp_name, "cv")) {
+            gotit = 1;
                 break;
         }
-  	}
-  	// try send signal to cv.
-  	printf("telling cv %d about %d \n", m_ptr -> m_source, m.m1_i1);
-  	asynsend3(dst -> mp_endpoint, m_ptr, AMF_NOREPLY);
+    }
+    if(gotit == 0){
+      printf("nie znalazlo\n");
+      return;
+    }
+    // try send signal to cv.
+    printf("telling cv %d about %d \n", m_ptr -> m_source, m_ptr -> m1_i1);
+    asynsend3(dst -> mp_endpoint, m_ptr, AMF_NOREPLY);
 };
