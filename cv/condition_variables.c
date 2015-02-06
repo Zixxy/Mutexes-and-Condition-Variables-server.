@@ -1,6 +1,7 @@
 #include <minix/type.h> // <--definition of endpoint inside
 #include <sys/errno.h>
 
+#include "includes.h"
 #include "constants.h"
 #include "mutexes.h"
 #include "condition_variables.h"
@@ -24,8 +25,28 @@ void initialize_cv(){
 //	printf("co??\n");
 }
 
+int cs_remove(endpoint_t who){
+	int flag = false;
+	for(int i = 0; i < POSSIBLE_CVS; ++i){
+		for(int u = 0; u < cvs[i].size; ++u){
+			if(flag){
+				cvs[i].processes[u - 1] = cvs[i].processes[u];
+				mutexes[i].processes[u - 1] = mutexes[i].processes[u];
+			}
+			if(cvs[i].processes[u] == who){
+				flag = true;
+			}
+		}
+		if(flag){
+			--cvs[i].size;
+			return SUCCESS;
+		}
+	}
+	return FAILURE;
+}
+
 int cs_wait(int cond_var_id, int mutex_id, endpoint_t who){
-//	printf("wait on cond_var = %d, mutex_id = %d, who = %d\n", cond_var_id, mutex_id, who);
+	printf("wait on cond_var = %d, mutex_id = %d, who = %d\n", cond_var_id, mutex_id, who);
 	int unlock_result = unlock_mutex(mutex_id, who);
 	if(unlock_result == EPERM)
 		return EINVAL;
@@ -57,11 +78,15 @@ int cs_broadcast(int cond_var_id){
 	for(int i = 0; i < POSSIBLE_CVS; ++i){
 		if(cvs[i].id == cond_var_id){
 			for(int u = 0; u < cvs[i].size; ++u){
-			//	printf("try lock mutex: %d \n", cvs[i].mutexes[u]);
+				printf("try lock mutex: %d \n", cvs[i].mutexes[u]);
 				int result = lock_mutex(cvs[i].mutexes[u], cvs[i].processes[u]);
-			//	printf("result = %d\n", result );
+				printf("result = %d\n", result );
 				if(result == SUCCESS){
-					send_response(cvs[i].processes[u], SUCCESS);
+					//temporrary solution
+					message m;
+					m.m_type = SUCCESS;
+					send(cvs[i].processes[u], &m);
+					//----
 				}
 			}
 			return SUCCESS;

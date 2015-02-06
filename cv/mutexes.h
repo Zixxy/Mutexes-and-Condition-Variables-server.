@@ -8,13 +8,11 @@
 
 #include "constants.h"
 
-/*in mutexes.c*/
-int lock_mutex(int number, endpoint_t who);
-int unlock_mutex(int number, endpoint_t who);
+int lock_mutex(int, endpoint_t);
+int unlock_mutex(int, endpoint_t);
 void create_mutexes();
 
-
-/*in main.c */
-void send_response(endpoint_t who, int content);
+void remove_process(endpoint_t);
+int remove_signalled(endpoint_t);
 
 #endif

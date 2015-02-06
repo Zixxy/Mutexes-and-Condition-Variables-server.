@@ -36,4 +36,7 @@
 #include "constants.h"
 #include "condition_variables.h"
 
+
+void send_response(endpoint_t who, int content);
+
 #endif

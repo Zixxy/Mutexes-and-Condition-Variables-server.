@@ -1,4 +1,5 @@
 #include "mutexes.h"
+#include "includes.h"
 
 #define NOBODY_HAS -1 // endpoint is int. Processess have pids greater than 0(am i sure?? - check it). We can use it as flag.
 
@@ -25,7 +26,61 @@ void create_mutexes(){
 	}
 }
 
+void remove_process(endpoint_t who){
+	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
+		if(reservations[i].who_has != NOBODY_HAS){
+			if(reservations[i].who_has == who){
+				if(unlock_mutex(who) == SUCCESS)
+				continue;
+			}
+
+			if(reservations[i].next_pending -> who == who){
+				reservations[i].next_pending = reservations[i].next_pending -> next_pending;
+				continue;
+			}
+
+			Pender* current = reservations[i].next_pending -> next_pending;
+			Pender* prev = reservations[i].next_pending;
+			do{
+				if(current -> who == who){
+					prev -> next_pending = current -> next_pending;
+					break;
+				}
+				prev = current;
+				current = current -> next_pending;
+			}while(current != NULL);
+		}
+	}
+}
+
+int remove_signalled(endpoint_t who){
+	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
+		if(reservations[i].who_has != NOBODY_HAS){
+			if(reservations[i].next_pending -> who == who){
+				reservations[i].next_pending = reservations[i].next_pending -> next_pending;
+				return SUCCESS;
+			}
+
+			Pender* current = reservations[i].next_pending -> next_pending;
+			Pender* prev = reservations[i].next_pending;
+			do{
+				if(current -> who == who){
+					prev -> next_pending = current -> next_pending;
+					return SUCCESS;
+				}
+				prev = current;
+				current = current -> next_pending;
+			}while(current != NULL);
+		}
+	}
+	return FAILURE;
+}
+
 int try_reservate(int which, endpoint_t who, int number){
+	printf("%d reservates %d with number %d\n", who, which, number);
+	if(reservations[which].who_has == who){ // he already has it. Cannot take it twice.
+		return FAILURE;
+	}
 	if(reservations[which].who_has == NOBODY_HAS){
 		reservations[which].number = number;
 		reservations[which].who_has = who;
@@ -85,7 +140,11 @@ int unlock_mutex(int number, endpoint_t who){
 		}
 		else{
 			reservations[which].who_has = reservations[which].next_pending -> who;
-			send_response(reservations[which].who_has, SUCCESS);
+			//temporrary solution
+			message m;
+			m.m_type = SUCCESS;
+			send(reservations[which].who_has, &m);
+			//----
 			if(reservations[which].next_pending == reservations[which].last_pending){
 				reservations[which].next_pending = NULL;
 				reservations[which].last_pending = NULL;

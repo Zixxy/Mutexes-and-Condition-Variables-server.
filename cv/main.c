@@ -19,6 +19,7 @@ int main(int argc, char *argv[]){
 
     create_mutexes();
     initialize_cv();
+    
 	while(true){
 		int r;
 		if((r = sef_receive(ANY, &m)) != OK) //tu ma byc OK zapytac 	
@@ -29,23 +30,46 @@ int main(int argc, char *argv[]){
 }
 
 static void resolve_message(message m){
+	
 	endpoint_t who_e;
 	int call_type = m.m_type;
 	who_e = m.m_source;
+
+	printf("received type: %d with number %d \n", call_type, m.m1_i1);
+
 	int result;
 	switch(call_type){
 		case LOCK_MUTEX:
 		result = lock_mutex(m.m1_i1, who_e);
 		break;
+
 		case UNLOCK_MUTEX:
 		result = unlock_mutex(m.m1_i1, who_e);
 		break;
+
 		case CS_WAIT:
 		result = cs_wait(m.m1_i2, m.m1_i1, who_e);
 		break; 
+
 		case CS_BROADCAST:
 		result = cs_broadcast(m.m1_i1);
 		break;
+
+		case PROC_SIGNALLED:
+		int r1 = cs_remove(m.m1_i1);
+		int r2 = remove_signalled(m.m1_i1);
+		if(r1 == SUCCESS || r2 == SUCCESS)
+			result = EINTR;
+		else
+			result = EDONTREPLY;
+		break;
+
+		case PROC_TERMINATED:
+		cs_remove(m.m1_i1);
+		remove_process(m.m1_i1);
+		result = EDONTREPLY;
+		break;
+
 		default:
         printf("CV warning: got illegal request from %d\n", who_e); //debug
         m.m_type = -EINVAL;
