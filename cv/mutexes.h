@@ -10,6 +10,7 @@
 
 int lock_mutex(int, endpoint_t);
 int unlock_mutex(int, endpoint_t);
+int lose_mutex(endpoint_t who);
 void create_mutexes();
 
 void remove_process(endpoint_t);

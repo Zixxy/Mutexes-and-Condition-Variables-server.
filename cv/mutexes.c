@@ -30,7 +30,7 @@ void remove_process(endpoint_t who){
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].who_has != NOBODY_HAS){
 			if(reservations[i].who_has == who){
-				if(unlock_mutex(who) == SUCCESS)
+				if(lose_mutex(who) == SUCCESS)
 				continue;
 			}
 
@@ -127,6 +127,45 @@ int unlock_mutex(int number, endpoint_t who){
 		}
 	}
 	printf("which %d who %d\n", which, who);
+	if(which == -1)
+		return EPERM;
+
+	if(reservations[which].who_has != who){
+		return EPERM;
+	}
+	else{
+		if(reservations[which].next_pending == NULL){
+			reservations[which].who_has = NOBODY_HAS;
+			return SUCCESS;
+		}
+		else{
+			reservations[which].who_has = reservations[which].next_pending -> who;
+			//temporrary solution
+			message m;
+			m.m_type = SUCCESS;
+			send(reservations[which].who_has, &m);
+			//----
+			if(reservations[which].next_pending == reservations[which].last_pending){
+				reservations[which].next_pending = NULL;
+				reservations[which].last_pending = NULL;
+				return SUCCESS;
+			}
+			else{
+				reservations[which].next_pending = reservations[which].next_pending -> next_pending;
+				return SUCCESS;
+			}
+		}
+	}
+}
+
+int lose_mutex(endpoint_t who){
+	int which = -1;
+	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
+		if(reservations[i].who_has == who){
+			which = i;
+			break;
+		}
+	}
 	if(which == -1)
 		return EPERM;
 

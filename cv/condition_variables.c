@@ -31,7 +31,7 @@ int cs_remove(endpoint_t who){
 		for(int u = 0; u < cvs[i].size; ++u){
 			if(flag){
 				cvs[i].processes[u - 1] = cvs[i].processes[u];
-				mutexes[i].processes[u - 1] = mutexes[i].processes[u];
+				cvs[i].mutexes[u - 1] = cvs[i].mutexes[u];
 			}
 			if(cvs[i].processes[u] == who){
 				flag = true;

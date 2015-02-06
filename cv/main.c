@@ -38,6 +38,7 @@ static void resolve_message(message m){
 	printf("received type: %d with number %d \n", call_type, m.m1_i1);
 
 	int result;
+	int res1, res2;
 	switch(call_type){
 		case LOCK_MUTEX:
 		result = lock_mutex(m.m1_i1, who_e);
@@ -56,9 +57,9 @@ static void resolve_message(message m){
 		break;
 
 		case PROC_SIGNALLED:
-		int r1 = cs_remove(m.m1_i1);
-		int r2 = remove_signalled(m.m1_i1);
-		if(r1 == SUCCESS || r2 == SUCCESS)
+		res1 = cs_remove(m.m1_i1);
+		res2 = remove_signalled(m.m1_i1);
+		if(res1 == SUCCESS || res2 == SUCCESS)
 			result = EINTR;
 		else
 			result = EDONTREPLY;
@@ -72,11 +73,12 @@ static void resolve_message(message m){
 
 		default:
         printf("CV warning: got illegal request from %d\n", who_e); //debug
-        m.m_type = -EINVAL;
         result = EINVAL;
 	}
 	if (result != EDONTREPLY && (result * (-1) != EDONTREPLY)) {
 		printf("result = %d EDONTREPLY = %d\n", result, EDONTREPLY);
+		if(result == EINVAL || result == EPERM)
+			result *= (-1);
 		send_response(who_e, result);
 	}
 }
