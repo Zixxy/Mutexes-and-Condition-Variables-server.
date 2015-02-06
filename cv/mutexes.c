@@ -15,7 +15,7 @@ typedef struct Reservation{
 	int number;
 } Reservation;
 
-struct Reservation* reservations;
+struct Reservation* reservations; // MEMORY LEAKS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 void create_mutexes(){
 	reservations = malloc(POSSIBLE_MUTEXES * sizeof(Reservation));
@@ -34,10 +34,16 @@ void remove_process(endpoint_t who){
 				continue;
 			}
 
+			if(reservations[i].next_pending == NULL)
+				continue;
+
 			if(reservations[i].next_pending -> who == who){
 				reservations[i].next_pending = reservations[i].next_pending -> next_pending;
 				continue;
 			}
+
+			if(reservations[i].next_pending -> next_pending == NULL)
+				continue;
 
 			Pender* current = reservations[i].next_pending -> next_pending;
 			Pender* prev = reservations[i].next_pending;
@@ -56,10 +62,16 @@ void remove_process(endpoint_t who){
 int remove_signalled(endpoint_t who){
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].who_has != NOBODY_HAS){
+			if(reservations[i].next_pending == NULL)
+				continue;
+
 			if(reservations[i].next_pending -> who == who){
 				reservations[i].next_pending = reservations[i].next_pending -> next_pending;
 				return SUCCESS;
 			}
+
+			if(reservations[i].next_pending -> next_pending == NULL)
+				continue;
 
 			Pender* current = reservations[i].next_pending -> next_pending;
 			Pender* prev = reservations[i].next_pending;

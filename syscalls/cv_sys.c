@@ -1,18 +1,23 @@
 #include <cv_sys.h>
 
 int cs_lock(int mutex_id){
+
 	int CV;
     int status = minix_rs_lookup("cv", &CV);
     message msg;
     msg.m1_i1 = mutex_id;
 
     int result;
-    while((result = _syscall(CV, 1, &msg)) == -1){
-        if(errno == EINTR)
+    while((result = _syscall(CV, 1, &msg)) == -1){  
+        printf("result = %d EINTR = %d errno = %d\n",result, EINTR, errno );
+        if(errno == EINTR){
+            msg.m1_i1 = mutex_id;
             continue;
+        }
         else
             return -1;
     }
+    printf("return result = %d EINTR = %d\n",result, EINTR );
     return result;
 }
 
@@ -33,7 +38,7 @@ int cs_wait(int cond_var_id, int mutex_id){
     msg.m1_i2 = cond_var_id;
 
     int result;
-    if((result = _syscall(CV, 3, &msg)) == -1 && errno == EINTR){
+    if(((result = _syscall(CV, 3, &msg)) == -1) && (errno == EINTR)){
         int l = cs_lock(mutex_id);
         if(l != -1)
             return 0;
