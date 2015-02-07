@@ -96,7 +96,4 @@ static int sef_cb_init_fresh(int UNUSED(type), sef_init_info_t *UNUSED(info))
     return OK;
 }
  
-static void sef_cb_signal_handler(int signo)
-{
-    if (signo != SIGTERM) return;
-}
+static void sef_cb_signal_handler(int signo){}

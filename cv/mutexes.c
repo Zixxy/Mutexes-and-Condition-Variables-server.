@@ -9,6 +9,7 @@ typedef struct Pender{
 } Pender;
 
 typedef struct Reservation{
+	short int occupied;
 	endpoint_t who_has;
 	struct Pender* next_pending;
 	struct Pender* last_pending;
@@ -20,7 +21,7 @@ struct Reservation* reservations;
 void create_mutexes(){
 	reservations = malloc(POSSIBLE_MUTEXES * sizeof(Reservation));
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
-		reservations[i].who_has = NOBODY_HAS;
+		reservations[i].occupied = false;
 		reservations[i].next_pending = NULL;
 		reservations[i].last_pending = NULL;
 	}
@@ -28,7 +29,7 @@ void create_mutexes(){
 
 void remove_process(endpoint_t who){
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
-		if(reservations[i].who_has != NOBODY_HAS){
+		if(reservations[i].occupied){
 			if(reservations[i].who_has == who){
 				if(lose_mutex(who) == SUCCESS)
 				continue;
@@ -68,7 +69,7 @@ void remove_process(endpoint_t who){
 
 int remove_signalled(endpoint_t who){
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
-		if(reservations[i].who_has != NOBODY_HAS){
+		if(reservations[i].occupied){
 			if(reservations[i].next_pending == NULL)
 				continue;
 
@@ -103,12 +104,13 @@ int remove_signalled(endpoint_t who){
 }
 
 int try_reservate(int which, endpoint_t who, int number){
-	if(reservations[which].who_has == who){ // he already has it. Cannot take it twice.
+	if(reservations[which].who_has == who && reservations[which].occupied){ // he already has it. Cannot take it twice.
 		return FAILURE;
 	}
-	if(reservations[which].who_has == NOBODY_HAS){
+	if(!reservations[which].occupied){
 		reservations[which].number = number;
 		reservations[which].who_has = who;
+		reservations[which].occupied = true;
 		return SUCCESS;
 	}
 	else{
@@ -131,30 +133,27 @@ int try_reservate(int which, endpoint_t who, int number){
 }
 
 int lock_mutex(int number, endpoint_t who){
-//	printf("MUT: proces %d locks %d", who, number);
 	int first_not_used = -1;
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].number == number)
 			return try_reservate(i, who, number);
 		else
 			if(first_not_used == -1)
-				if(reservations[i].who_has == NOBODY_HAS)
+				if(!reservations[i].occupied)
 					first_not_used = i;
 	}
 	return try_reservate(first_not_used, who, number);
 }
 
 int unlock_mutex(int number, endpoint_t who){
-//	printf("MUT: proces %d unlocks %d \n",who, number );
 	int which = -1;
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
-		if(reservations[i].number == number){
+		if(reservations[i].number == number && reservations[i].occupied){
 			which = i;
 			break;
 		}
 	}
 
-//	printf("UNLOCK EPERM =  %d\n", EPERM );
 	if(which == -1)
 		return EPERM;
 
@@ -163,16 +162,15 @@ int unlock_mutex(int number, endpoint_t who){
 	}
 	else{
 		if(reservations[which].next_pending == NULL){
-			reservations[which].who_has = NOBODY_HAS;
+			reservations[which].occupied = false;
 			return SUCCESS;
 		}
 		else{
 			reservations[which].who_has = reservations[which].next_pending -> who;
-			//temporrary solution
+			reservations[which].occupied = true;
 			message m;
 			m.m_type = SUCCESS;
 			send(reservations[which].who_has, &m);
-			//----
 			if(reservations[which].next_pending == reservations[which].last_pending){
 				struct Pender* freeIt = reservations[which].next_pending;
 				reservations[which].next_pending = NULL;
@@ -193,7 +191,7 @@ int unlock_mutex(int number, endpoint_t who){
 int lose_mutex(endpoint_t who){
 	int which = -1;
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
-		if(reservations[i].who_has == who){
+		if(reservations[i].who_has == who && reservations[i].occupied){
 			which = i;
 			break;
 		}
@@ -206,11 +204,12 @@ int lose_mutex(endpoint_t who){
 	}
 	else{
 		if(reservations[which].next_pending == NULL){
-			reservations[which].who_has = NOBODY_HAS;
+			reservations[which].occupied = false;
 			return SUCCESS;
 		}
 		else{
 			reservations[which].who_has = reservations[which].next_pending -> who;
+			reservations[which].occupied = true;
 			//temporrary solution
 			message m;
 			m.m_type = SUCCESS;
