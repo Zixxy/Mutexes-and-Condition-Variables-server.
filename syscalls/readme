@@ -1,5 +1,6 @@
 cv_sys.h should be in /usr/src/include
 
 cv_sys.c should be in /usr/src/lib/libc/sys-minix
+Makefile.inc should be in /usr/src/lib/libc/sys-minix
 
 in /usr/src/lib do 'make install' then reboot

@@ -8,8 +8,7 @@ int cs_lock(int mutex_id){
     msg.m1_i1 = mutex_id;
 
     int result;
-    while((result = _syscall(CV, 1, &msg)) == -1){  
-        printf("result = %d EINTR = %d errno = %d\n",result, EINTR, errno );
+    while((result = _syscall(CV, 1, &msg)) == -1){
         if(errno == EINTR){
             msg.m1_i1 = mutex_id;
             continue;
@@ -17,7 +16,6 @@ int cs_lock(int mutex_id){
         else
             return -1;
     }
-    printf("return result = %d EINTR = %d\n",result, EINTR );
     return result;
 }
 

@@ -15,7 +15,7 @@ typedef struct Reservation{
 	int number;
 } Reservation;
 
-struct Reservation* reservations; // MEMORY LEAKS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+struct Reservation* reservations;
 
 void create_mutexes(){
 	reservations = malloc(POSSIBLE_MUTEXES * sizeof(Reservation));
@@ -38,7 +38,11 @@ void remove_process(endpoint_t who){
 				continue;
 
 			if(reservations[i].next_pending -> who == who){
+				if(reservations[i].last_pending -> who == who)
+					reservations[i].last_pending = NULL;
+				struct Pender* freeIt = reservations[i].next_pending;
 				reservations[i].next_pending = reservations[i].next_pending -> next_pending;
+				free(freeIt);
 				continue;
 			}
 
@@ -49,7 +53,10 @@ void remove_process(endpoint_t who){
 			Pender* prev = reservations[i].next_pending;
 			do{
 				if(current -> who == who){
+					if(who == reservations[i].last_pending -> who)
+						reservations[i].last_pending = prev;
 					prev -> next_pending = current -> next_pending;
+					free(current);
 					break;
 				}
 				prev = current;
@@ -66,7 +73,11 @@ int remove_signalled(endpoint_t who){
 				continue;
 
 			if(reservations[i].next_pending -> who == who){
+				if(reservations[i].last_pending -> who == who)
+					reservations[i].last_pending = NULL;
+				struct Pender* freeIt = reservations[i].next_pending;
 				reservations[i].next_pending = reservations[i].next_pending -> next_pending;
+				free(freeIt);
 				return SUCCESS;
 			}
 
@@ -77,7 +88,10 @@ int remove_signalled(endpoint_t who){
 			Pender* prev = reservations[i].next_pending;
 			do{
 				if(current -> who == who){
+					if(who == reservations[i].last_pending -> who)
+						reservations[i].last_pending = prev;
 					prev -> next_pending = current -> next_pending;
+					free(current);
 					return SUCCESS;
 				}
 				prev = current;
@@ -89,7 +103,6 @@ int remove_signalled(endpoint_t who){
 }
 
 int try_reservate(int which, endpoint_t who, int number){
-	printf("%d reservates %d with number %d\n", who, which, number);
 	if(reservations[which].who_has == who){ // he already has it. Cannot take it twice.
 		return FAILURE;
 	}
@@ -118,6 +131,7 @@ int try_reservate(int which, endpoint_t who, int number){
 }
 
 int lock_mutex(int number, endpoint_t who){
+	printf("MUT: proces %d locks %d", who, number);
 	int first_not_used = -1;
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].number == number)
@@ -131,6 +145,7 @@ int lock_mutex(int number, endpoint_t who){
 }
 
 int unlock_mutex(int number, endpoint_t who){
+	printf("MUT: proces %d unlocks %d \n",who, number );
 	int which = -1;
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].number == number){
@@ -138,7 +153,8 @@ int unlock_mutex(int number, endpoint_t who){
 			break;
 		}
 	}
-	printf("which %d who %d\n", which, who);
+
+//	printf("UNLOCK EPERM =  %d\n", EPERM );
 	if(which == -1)
 		return EPERM;
 
@@ -158,12 +174,16 @@ int unlock_mutex(int number, endpoint_t who){
 			send(reservations[which].who_has, &m);
 			//----
 			if(reservations[which].next_pending == reservations[which].last_pending){
+				struct Pender* freeIt = reservations[which].next_pending;
 				reservations[which].next_pending = NULL;
 				reservations[which].last_pending = NULL;
+				free(freeIt);
 				return SUCCESS;
 			}
 			else{
+				struct Pender* freeIt = reservations[which].next_pending;
 				reservations[which].next_pending = reservations[which].next_pending -> next_pending;
+				free(freeIt);
 				return SUCCESS;
 			}
 		}
@@ -197,12 +217,16 @@ int lose_mutex(endpoint_t who){
 			send(reservations[which].who_has, &m);
 			//----
 			if(reservations[which].next_pending == reservations[which].last_pending){
+				struct Pender* freeIt = reservations[which].next_pending;
 				reservations[which].next_pending = NULL;
 				reservations[which].last_pending = NULL;
+				free(freeIt);
 				return SUCCESS;
 			}
 			else{
+				struct Pender* freeIt = reservations[which].next_pending;
 				reservations[which].next_pending = reservations[which].next_pending -> next_pending;
+				free(freeIt);
 				return SUCCESS;
 			}
 		}

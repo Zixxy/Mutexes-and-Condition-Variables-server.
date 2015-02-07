@@ -3,7 +3,6 @@
 
 #include <lib.h>
 #include <sys/cdefs.h>
-#include <minix/rs.h>
 #include <minix/endpoint.h>
 #include <stdio.h>
 

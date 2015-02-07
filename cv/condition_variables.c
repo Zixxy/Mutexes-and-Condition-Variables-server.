@@ -1,4 +1,4 @@
-#include <minix/type.h> // <--definition of endpoint inside
+	#include <minix/type.h> // <--definition of endpoint inside
 #include <sys/errno.h>
 
 #include "includes.h"
@@ -75,12 +75,11 @@ int cs_wait(int cond_var_id, int mutex_id, endpoint_t who){
 }
 
 int cs_broadcast(int cond_var_id){
+	printf("BROADCAST\n");
 	for(int i = 0; i < POSSIBLE_CVS; ++i){
 		if(cvs[i].id == cond_var_id){
 			for(int u = 0; u < cvs[i].size; ++u){
-				printf("try lock mutex: %d \n", cvs[i].mutexes[u]);
 				int result = lock_mutex(cvs[i].mutexes[u], cvs[i].processes[u]);
-				printf("result = %d\n", result );
 				if(result == SUCCESS){
 					//temporrary solution
 					message m;
@@ -89,6 +88,7 @@ int cs_broadcast(int cond_var_id){
 					//----
 				}
 			}
+			cvs[i].size = 0;
 			return SUCCESS;
 			break;
 		}

@@ -1,4 +1,4 @@
-#include "includes.h"
+	#include "includes.h"
 
 static void sef_local_startup(void);
 static int sef_cb_init_fresh(int type, sef_init_info_t *info);
@@ -35,13 +35,14 @@ static void resolve_message(message m){
 	int call_type = m.m_type;
 	who_e = m.m_source;
 
-	printf("received type: %d with number %d \n", call_type, m.m1_i1);
+//	printf("received type: %d with number %d \n", call_type, m.m1_i1);
 
 	int result;
 	int res1, res2;
 	switch(call_type){
 		case LOCK_MUTEX:
 		result = lock_mutex(m.m1_i1, who_e);
+		printf("ok locking: %d\n", result);
 		break;
 
 		case UNLOCK_MUTEX:
@@ -59,8 +60,11 @@ static void resolve_message(message m){
 		case PROC_SIGNALLED:
 		res1 = cs_remove(m.m1_i1);
 		res2 = remove_signalled(m.m1_i1);
-		if(res1 == SUCCESS || res2 == SUCCESS)
+		if(res1 == SUCCESS || res2 == SUCCESS){
+			who_e = m.m1_i1;
+		//	printf("OK!!!\n");
 			result = EINTR;
+		}
 		else
 			result = EDONTREPLY;
 		break;
@@ -72,13 +76,14 @@ static void resolve_message(message m){
 		break;
 
 		default:
-        printf("CV warning: got illegal request from %d\n", who_e); //debug
+    //    printf("CV warning: got illegal request from %d\n", who_e); //debug
         result = EINVAL;
 	}
 	if (result != EDONTREPLY && (result * (-1) != EDONTREPLY)) {
-		printf("result = %d EDONTREPLY = %d\n", result, EDONTREPLY);
-		if(result == EINVAL || result == EPERM)
-			result *= (-1);
+		//printf("result = %d EDONTREPLY = %d \n", result, EDONTREPLY);
+		//if(result == EINVAL || result == EPERM)
+		result *= (-1);
+		printf("to = %d result = %d EPERM = %d \n", who_e, result, EPERM);
 		send_response(who_e, result);
 	}
 }
