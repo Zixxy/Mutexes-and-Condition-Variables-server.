@@ -1,8 +1,6 @@
 #include "mutexes.h"
 #include "includes.h"
 
-#define NOBODY_HAS -1 // endpoint is int. Processess have pids greater than 0(am i sure?? - check it). We can use it as flag.
-
 typedef struct Pender{
 	struct Pender* next_pending;
 	endpoint_t who;
