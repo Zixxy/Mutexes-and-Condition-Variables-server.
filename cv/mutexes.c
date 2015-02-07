@@ -131,7 +131,7 @@ int try_reservate(int which, endpoint_t who, int number){
 }
 
 int lock_mutex(int number, endpoint_t who){
-	printf("MUT: proces %d locks %d", who, number);
+//	printf("MUT: proces %d locks %d", who, number);
 	int first_not_used = -1;
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].number == number)
@@ -145,7 +145,7 @@ int lock_mutex(int number, endpoint_t who){
 }
 
 int unlock_mutex(int number, endpoint_t who){
-	printf("MUT: proces %d unlocks %d \n",who, number );
+//	printf("MUT: proces %d unlocks %d \n",who, number );
 	int which = -1;
 	for(int i = 0; i < POSSIBLE_MUTEXES; ++i){
 		if(reservations[i].number == number){
