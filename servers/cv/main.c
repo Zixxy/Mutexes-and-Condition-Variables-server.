@@ -54,10 +54,10 @@ static void resolve_message(message m){
 		break;
 
 		case PROC_SIGNALLED:
-		res1 = cs_remove(m.m1_i1);
-		res2 = remove_signalled(m.m1_i1);
+		res1 = cs_remove(m.PM_PROC);
+		res2 = remove_signalled(m.PM_PROC);
 		if(res1 == SUCCESS || res2 == SUCCESS){
-			who_e = m.m1_i1;
+			who_e = m.PM_PROC;
 			result = (-1)*EINTR;
 		}
 		else
@@ -65,8 +65,8 @@ static void resolve_message(message m){
 		break;
 
 		case PROC_TERMINATED:
-		cs_remove(m.m1_i1);
-		remove_process(m.m1_i1);
+		cs_remove(m.PM_PROC);
+		remove_process(m.PM_PROC);
 		result = EDONTREPLY;
 		break;
 
