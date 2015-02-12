@@ -1,0 +1,10 @@
+Build:
+
+1. cp -r [everything] /usr/src
+2. cp /usr/src/etc/usr/rc /usr/src
+3. cd /usr/src/servers/cv
+4. make clean
+5. make
+6. make install
+7. cd /usr/src make build
+8. reboot
